@@ -158,7 +158,7 @@ public:
 			tightBoundingBox.AddMember("uy", this->tightBoundingBox.max.y, d.GetAllocator());
 			tightBoundingBox.AddMember("uz", this->tightBoundingBox.max.z, d.GetAllocator());
 		}
-		
+
 		Value pointAttributes;
 		if(outputFormat == OutputFormat::BINARY){
 			pointAttributes.SetArray();
@@ -171,6 +171,8 @@ public:
 			pointAttributes = "LAS";
 		}else if(outputFormat == OutputFormat::LAZ){
 			pointAttributes = "LAZ";
+		}else if(outputFormat == OutputFormat::CUSTOM_BINARY){
+			pointAttributes = "CIN";
 		}
 		Value spacing(this->spacing);
 		Value scale(this->scale);

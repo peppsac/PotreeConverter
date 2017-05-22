@@ -12,6 +12,7 @@
 #include "LASPointWriter.hpp"
 #include "BINPointWriter.hpp"
 #include "BINPointReader.hpp"
+#include "CINPointReader.hpp"
 #include "PlyPointReader.h"
 #include "XYZPointReader.hpp"
 
@@ -61,6 +62,8 @@ PointReader *PotreeConverter::createPointReader(string path, PointAttributes poi
 		reader = new XYZPointReader(path, format, colorRange, intensityRange);
  	}else if(boost::iends_with(path, ".bin")){
 		reader = new BINPointReader(path, aabb, scale, pointAttributes);
+ 	}else if(boost::iends_with(path, ".cin")){
+		reader = new CINPointReader(path, aabb, scale, pointAttributes);
 	}
 
 	return reader;
@@ -83,8 +86,8 @@ void PotreeConverter::prepare(){
 				path pDirectoryEntry = it->path();
 				if(boost::filesystem::is_regular_file(pDirectoryEntry)){
 					string filepath = pDirectoryEntry.string();
-					if(boost::iends_with(filepath, ".las") 
-						|| boost::iends_with(filepath, ".laz") 
+					if(boost::iends_with(filepath, ".las")
+						|| boost::iends_with(filepath, ".laz")
 						|| boost::iends_with(filepath, ".xyz")
 						|| boost::iends_with(filepath, ".pts")
 						|| boost::iends_with(filepath, ".ptx")
@@ -124,7 +127,7 @@ AABB PotreeConverter::calculateAABB(){
 		for(string source : sources){
 
 			PointReader *reader = createPointReader(source, pointAttributes);
-			
+
 			AABB lAABB = reader->getAABB();
 			aabb.update(lAABB.min);
 			aabb.update(lAABB.max);
@@ -153,16 +156,16 @@ void PotreeConverter::generatePage(string name){
 		while(getline(in, line)){
 			if(line.find("<!-- INCLUDE SETTINGS HERE -->") != string::npos){
 				out << "\t<script src=\"./" << name << ".js\"></script>" << endl;
-			}else if((outputFormat == Potree::OutputFormat::LAS || outputFormat == Potree::OutputFormat::LAZ) && 
+			}else if((outputFormat == Potree::OutputFormat::LAS || outputFormat == Potree::OutputFormat::LAZ) &&
 				line.find("<!-- INCLUDE ADDITIONAL DEPENDENCIES HERE -->") != string::npos){
-				
+
 				out << "\t<script src=\"../libs/plasio/js/laslaz.js\"></script>" << endl;
 				out << "\t<script src=\"../libs/plasio/vendor/bluebird.js\"></script>" << endl;
 				out << "\t<script src=\"../build/js/laslaz.js\"></script>" << endl;
 			}else{
 				out << line << endl;
 			}
-			
+
 		}
 
 		in.close();
@@ -187,7 +190,7 @@ void PotreeConverter::generatePage(string name){
 		ssSettings << "\tuseEDL: false,				" << endl;
 		ssSettings << "};" << endl;
 
-	
+
 		ofstream fSettings;
 		fSettings.open(pagedir + "/examples/" + name + ".js", ios::out);
 		fSettings << ssSettings.str();
@@ -274,15 +277,15 @@ void PotreeConverter::convert(){
 			}
 			if((pointsProcessed % (10'000'000)) == 0){
 				cout << "FLUSHING: ";
-			
+
 				auto start = high_resolution_clock::now();
-			
+
 				writer->flush();
-			
+
 				auto end = high_resolution_clock::now();
 				long long duration = duration_cast<milliseconds>(end-start).count();
 				float seconds = duration / 1'000.0f;
-			
+
 				cout << seconds << "s" << endl;
 			}
 
@@ -293,7 +296,7 @@ void PotreeConverter::convert(){
 		reader->close();
 		delete reader;
 	}
-	
+
 	cout << "closing writer" << endl;
 	writer->flush();
 	writer->close();
@@ -304,7 +307,7 @@ void PotreeConverter::convert(){
 	auto end = high_resolution_clock::now();
 	long long duration = duration_cast<milliseconds>(end-start).count();
 
-	
+
 	cout << endl;
 	cout << "conversion finished" << endl;
 	cout << pointsProcessed << " points were processed and " << writer->numAccepted << " points ( " << percent << "% ) were written to the output. " << endl;

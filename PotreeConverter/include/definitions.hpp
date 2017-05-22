@@ -7,7 +7,8 @@ namespace Potree{
 enum class OutputFormat{
 	BINARY,
 	LAS,
-	LAZ
+	LAZ,
+	CUSTOM_BINARY,
 };
 
 enum class StoreOption{

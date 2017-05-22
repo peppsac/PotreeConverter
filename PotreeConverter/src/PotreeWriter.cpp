@@ -21,8 +21,10 @@
 #include "PointWriter.hpp"
 #include "LASPointReader.h"
 #include "BINPointReader.hpp"
+#include "CINPointReader.hpp"
 #include "LASPointWriter.hpp"
 #include "BINPointWriter.hpp"
+#include "CINPointWriter.hpp"
 #include "PotreeException.h"
 
 #include "PotreeWriter.h"
@@ -103,6 +105,8 @@ PointReader *PWNode::createReader(string path){
 		reader = new LASPointReader(path);
 	}else if(outputFormat == OutputFormat::BINARY){
 		reader = new BINPointReader(path, aabb, potreeWriter->scale, this->potreeWriter->pointAttributes);
+	}else if(outputFormat == OutputFormat::CUSTOM_BINARY){
+		reader = new CINPointReader(path, aabb, potreeWriter->scale, this->potreeWriter->pointAttributes);
 	}
 
 	return reader;
@@ -115,11 +119,13 @@ PointWriter *PWNode::createWriter(string path){
 		writer = new LASPointWriter(path, aabb, potreeWriter->scale);
 	}else if(outputFormat == OutputFormat::BINARY){
 		writer = new BINPointWriter(path, aabb, potreeWriter->scale, this->potreeWriter->pointAttributes);
+	}else if(outputFormat == OutputFormat::CUSTOM_BINARY){
+		writer = new CINPointWriter(path, aabb, potreeWriter->scale, this->potreeWriter->pointAttributes);
 	}
 
 	return writer;
 
-	
+
 }
 
 void PWNode::loadFromDisk(){
@@ -128,7 +134,7 @@ void PWNode::loadFromDisk(){
 		Point p = reader->getPoint();
 
 		if(isLeafNode()){
-			store.push_back(p);		
+			store.push_back(p);
 		}else{
 			grid->addWithoutCheck(p.position);
 		}
@@ -261,7 +267,7 @@ void PWNode::flush(){
 
 	if(isLeafNode()){
 		if(addCalledSinceLastFlush){
-			writeToDisk(store, false);		
+			writeToDisk(store, false);
 		}else if(!addCalledSinceLastFlush && isInMemory){
 			store = vector<Point>();
 			isInMemory = false;
@@ -289,18 +295,18 @@ void PWNode::flush(){
 vector<PWNode*> PWNode::getHierarchy(int levels){
 
 	vector<PWNode*> hierarchy;
-	
+
 	list<PWNode*> stack;
 	stack.push_back(this);
 	while(!stack.empty()){
 		PWNode *node = stack.front();
 		stack.pop_front();
-	
+
 		if(node->level >= this->level + levels){
 			break;
 		}
 		hierarchy.push_back(node);
-	
+
 		for(PWNode *child : node->children){
 			if(child != NULL){
 				stack.push_back(child);
@@ -432,6 +438,8 @@ string PotreeWriter::getExtension(){
 		return ".laz";
 	}else if(outputFormat == OutputFormat::BINARY){
 		return ".bin";
+	}else if(outputFormat == OutputFormat::CUSTOM_BINARY){
+		return ".cin";
 	}
 
 	return "";
@@ -506,8 +514,8 @@ void PotreeWriter::flush(){
 		cloudOut.close();
 	}
 
-		
-	
+
+
 	{// write hierarchy
 		//auto start = high_resolution_clock::now();
 
@@ -519,9 +527,9 @@ void PotreeWriter::flush(){
 		while(!stack.empty()){
 			PWNode *node = stack.front();
 			stack.pop_front();
-	
+
 			hrcTotal++;
-			
+
 			vector<PWNode*> hierarchy = node->getHierarchy(hierarchyStepSize + 1);
 			bool needsFlush = false;
 			for(const auto &descendant : hierarchy){
@@ -560,12 +568,12 @@ void PotreeWriter::flush(){
 		});
 
 		//cout << "hrcTotal: " << hrcTotal << "; " << "hrcFlushed: " << hrcFlushed << endl;
-	
+
 		//auto end = high_resolution_clock::now();
 		//long long duration = duration_cast<milliseconds>(end-start).count();
 		//float seconds = duration / 1'000.0f;
 		//cout << "writing hierarchy: " << seconds << "s" << endl;
-	
+
 	}
 }
 
@@ -595,17 +603,17 @@ void PotreeWriter::loadStateFromDisk(){
 
 	{// tree
 		vector<string> hrcPaths;
-		fs::path rootDir(workDir + "/data/r"); 
+		fs::path rootDir(workDir + "/data/r");
 		for (fs::recursive_directory_iterator iter(rootDir), end; iter != end; ++iter){
 			fs::path path = iter->path();
 			if(fs::is_regular_file(path)){
 				if(boost::iends_with(path.extension().string(), ".hrc")){
 					hrcPaths.push_back(path.string());
 				}else{
-			
+
 				}
 			}else if(fs::is_directory(path)){
-		
+
 			}
 		}
 		std::sort(hrcPaths.begin(), hrcPaths.end(), [](string &a, string &b){
@@ -624,7 +632,7 @@ void PotreeWriter::loadStateFromDisk(){
 			current->isInMemory = false;
 			vector<PWNode*> nodes;
 			nodes.push_back(hrcRoot);
-		
+
 			ifstream fin(hrcPath, ios::in | ios::binary);
 			std::vector<char> buffer((std::istreambuf_iterator<char>(fin)), (std::istreambuf_iterator<char>()));
 
@@ -673,7 +681,7 @@ void PotreeWriter::loadStateFromDisk(){
 		//	}
 		//
 		//	numNodes++;
-		//	
+		//
 		//});
 	}
 

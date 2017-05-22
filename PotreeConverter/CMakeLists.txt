@@ -8,9 +8,11 @@ file(GLOB_RECURSE lib_rapidjson_files ${RAPIDJSON_INCLUDE_DIR}/* )
 include_directories(include ${LASZIP_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 include_directories(include ${RAPIDJSON_INCLUDE_DIR})
 
-SOURCE_GROUP("Header Files\\io" FILES 
-	include/BINPointReader.hpp 
+SOURCE_GROUP("Header Files\\io" FILES
+	include/BINPointReader.hpp
 	include/BINPointWriter.hpp
+	include/CINPointReader.hpp
+	include/CINPointWriter.hpp
 	include/LASPointReader.h
 	include/LASPointWriter.hpp
 	include/PlyPointReader.h
@@ -20,15 +22,15 @@ SOURCE_GROUP("Header Files\\io" FILES
 	include/XYZPointReader.hpp
 )
 
-SOURCE_GROUP("Source Files\\io" FILES 
+SOURCE_GROUP("Source Files\\io" FILES
 	src/BINPointReader.cpp
+	src/CINPointReader.cpp
 	src/LASPointReader.cpp
 	src/LASPointWriter.cpp
 	src/PTXPointReader.cpp
 )
 
 SOURCE_GROUP("lib\\rapidjson" FILES ${lib_rapidjson_files})
-
 
 
 add_executable(PotreeConverter ${files} ${lib_rapidjson_files})
