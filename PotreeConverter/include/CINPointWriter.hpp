@@ -38,8 +38,10 @@ public:
 		unsigned char rgba[4];
 		Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a) { rgba[0] = r; rgba[1] = g; rgba[2] = b; rgba[3] = a;}
 	};
+
 	std::vector<Position> positions;
 	std::vector<Color> colors;
+	std::vector<unsigned short> intensities;
 
 	struct {
 		float x, y, z;
@@ -96,6 +98,7 @@ public:
 			}else if(attribute == PointAttribute::COLOR_PACKED){
 				colors.push_back(Color(point.color.x, point.color.y, point.color.z, 255));
 			}else if(attribute == PointAttribute::INTENSITY){
+				intensities.push_back(point.intensity);
 				// unsigned char i = (unsigned char)(255 * (point.intensity / 65535.0));
 				// colors.push_back(i);
 				// colors.push_back(i);
@@ -136,6 +139,11 @@ public:
 				}
 				for (size_t i=0; i<count; i++) {
 					writer->write((const char*)&(colors[indices[i]].rgba), 4);
+				}
+				if (intensities.size() > 0) {
+					for (size_t i=0; i<count; i++) {
+						writer->write((const char*)&(intensities[indices[i]]), 2);
+					}
 				}
 			} else {
 				writer->write((const char*)positions.data(), positions.size() * 3 * sizeof(int));

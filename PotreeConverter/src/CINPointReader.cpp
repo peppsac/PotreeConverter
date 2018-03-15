@@ -45,6 +45,20 @@ CINPointReader::CINPointReader(string path,  AABB aabb, double scale, PointAttri
 	// std::cout << "new " << *currentFile << std::endl;
 	numPts = 0;
 	index = -1;
+
+	this->hasIntensity = false;
+	this->bytesPerPoint = 0;
+	for(int i = 0; i < attributes.size(); i++){
+		PointAttribute attribute = attributes[i];
+		if(attribute == PointAttribute::POSITION_CARTESIAN) {
+			this->bytesPerPoint += 3 * 4;
+		} else if (attribute == PointAttribute::COLOR_PACKED) {
+			this->bytesPerPoint += 4;
+		} else if (attribute == PointAttribute::INTENSITY) {
+			this->bytesPerPoint += 2;
+			this->hasIntensity = true;
+		}
+	}
 }
 
 CINPointReader::~CINPointReader(){
@@ -88,15 +102,19 @@ bool CINPointReader::readNextPoint(){
     		// std::cout << *currentFile << "length " << length << '.' << std::endl;
     		reader->seekg (0, reader->beg);
 
-    		this->numPts = (length - 6 * 4) / (3 * 4 + 4);
-    		// std::cout << "num = '" << numPts << "'" << std::endl;
+    		this->numPts = (length - 6 * 4) / this->bytesPerPoint;
 
-
-    		reader->read((char*)this->bbox, sizeof(float) * 6);
-    		this->positions.resize(3 * numPts);
-			reader->read((char*)this->positions.data(), numPts * sizeof(float) * 3);
-			this->colors.resize(4 * numPts);
-			reader->read((char*)this->colors.data(), numPts * 4);
+    		if (this->numPts > 0) {
+	    		reader->read((char*)this->bbox, sizeof(float) * 6);
+	    		this->positions.resize(3 * numPts);
+				reader->read((char*)this->positions.data(), numPts * sizeof(float) * 3);
+				this->colors.resize(4 * numPts);
+				reader->read((char*)this->colors.data(), numPts * 4);
+				if (this->hasIntensity) {
+					this->intensities.resize(numPts);
+					reader->read((char*)this->intensities.data(), numPts * 2);
+				}
+			}
 			index = 0;
 		} else {
 			return false;
@@ -114,7 +132,7 @@ bool CINPointReader::readNextPoint(){
 		point.color.y = colors[4 * index + 1];
 		point.color.z = colors[4 * index + 2];
 
-		point.intensity = colors[4 * index];
+		point.intensity = intensities[index];
 
 		index++;
 		return true;

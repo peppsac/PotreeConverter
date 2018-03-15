@@ -160,6 +160,7 @@ public:
 		}
 
 		Value pointAttributes;
+		Value pointAttributes2;
 		if(outputFormat == OutputFormat::BINARY){
 			pointAttributes.SetArray();
 			for(int i = 0; i < this->pointAttributes.size(); i++){
@@ -173,6 +174,12 @@ public:
 			pointAttributes = "LAZ";
 		}else if(outputFormat == OutputFormat::CUSTOM_BINARY){
 			pointAttributes = "CIN";
+			pointAttributes2.SetArray();
+			for(int i = 0; i < this->pointAttributes.size(); i++){
+				PointAttribute attribute = this->pointAttributes[i];
+				Value str(attribute.name.c_str(), d.GetAllocator());
+				pointAttributes2.PushBack(str, d.GetAllocator());
+			}
 		}
 		Value spacing(this->spacing);
 		Value scale(this->scale);
@@ -185,6 +192,7 @@ public:
 		d.AddMember("boundingBox", boundingBox, d.GetAllocator());
 		d.AddMember("tightBoundingBox", tightBoundingBox, d.GetAllocator());
 		d.AddMember("pointAttributes", pointAttributes, d.GetAllocator());
+		d.AddMember("pointAttributes2", pointAttributes2, d.GetAllocator());
 		d.AddMember("spacing", spacing, d.GetAllocator());
 		d.AddMember("scale", scale, d.GetAllocator());
 		d.AddMember("hierarchyStepSize", hierarchyStepSize, d.GetAllocator());

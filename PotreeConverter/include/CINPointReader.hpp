@@ -36,6 +36,10 @@ private:
 	float bbox[6];
 	std::vector<float> positions;
 	std::vector<unsigned char> colors;
+	std::vector<unsigned short> intensities;
+
+	int bytesPerPoint;
+	bool hasIntensity;
 
 public:
 
