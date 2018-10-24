@@ -132,7 +132,9 @@ bool CINPointReader::readNextPoint(){
 		point.color.y = colors[4 * index + 1];
 		point.color.z = colors[4 * index + 2];
 
-		point.intensity = intensities[index];
+		if (this->hasIntensity) {
+			point.intensity = intensities[index];
+		}
 
 		index++;
 		return true;
